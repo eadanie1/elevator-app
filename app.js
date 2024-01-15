@@ -39,111 +39,106 @@ async function getElevatorStatus(req, res) {
     }
 }
 
-// console.log('Current locations of elevators' , 'Elevator 1:', elevators[0].id, 'Elevator 2:', elevators[1].id, 'Elevator 3:', elevators[2].id);
-// console.log('Current locations of elevators:' , 'Elevator 1:', elevators[0].currentFloor, 'Elevator 2:', elevators[1].currentFloor, 'Elevator 3:', elevators[2].currentFloor);
-// console.log('Current status of elevators:' , 'Elevator 1:', elevators[0].status, 'Elevator 2:', elevators[1].status, 'Elevator 3:', elevators[2].status);
+app.get('/api/elevators/availability/:id', isElevatorAvailable);
 
-// app.get('/api/elevators', (req, res) => {
-    //     // const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-    
-    //     // console.log('Current locations of elevators' , 'Elevator 1:', elevators[0].currentFloor, 'Elevator 2:', elevators[1].currentFloor, 'Elevator 3:', elevators[2].currentFloor);
-    //     res.json(elevators);
-// });
+async function isElevatorAvailable(req, res) {
+    const elevator = elevators.find(e => e.id === parseInt(req.params.id));
+    if (elevator.status === 'idle') {
+        return res.json({message: `Elevator ${elevator.id} is idle and available for a new call`});
+    } else {
+        return res.json({message: `Elevator ${elevator.id} is busy and unavailable to take a new call`});
+    }
+}
 
-// app.get('/api/elevators/:id', async (req, res) => {
-//     const elevator = elevators.find(e => e.id === parseInt(req.params.id));
+app.put('/api/elevators/call-elevator-to/:floor', callElevatorToFloor);
 
-//     const checkStatus = elevator.status;
-
-// });
-
-// app.post('/api/elevators/call-elevator/:floor', (req, res) => {
-//     const elevator = elevators.find(e => e.id === parseInt(req.body.id));
-//     elevator.destinationFloor = req.params.id;
-// });
-
-// app.post('/api/elevators/call-elevator-to/:id', (req, res) => {
-//     try{
-//         const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-//         elevator.destinationFloor = parseInt(req.body.destinationFloor);
-//         setTimeout(() => {
-//             elevator.currentFloor = req.body.destinationFloor;
-//         }, 4000);
-//     }
-//     catch(error) {
-//         console.error('Error', error.message);
-//     }
-// });
-
-
-
-
-app.put('/api/elevators/call-elevator-to/:id', callElevatorToFloor); //change back to :floor
+const pendingCallsQueue = [];
 
 async function callElevatorToFloor(req, res) {
-    try{
-        // somehow iterate over the elevators, and use some method
-        // to find the one whose currentFloor is the least in difference to what is called
-        // absolute value somehow of (currentFloor-parseInt(req.params.floor))/2 
-        // not div by 2? but similar, then take the minimum of all three elements, 
-        // and will take the first one that satisfies, if two are same, it should
-        // take the first one it finds (dont think need div by 2 or anything, as it
-        // will get me the delta difference in floors)
+    try {
+        let minDifference = Math.abs(elevators[0].currentFloor - parseInt(req.params.floor));
+        let selectedElevator = elevators[0];
 
-        // ask GPT if there's a method to get smallest delta, before that iterate
-        // over the three elements currentFloor properties, to find which is smallest
+        for (let elevator of elevators) {
+            let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
 
-        const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-        // elevator.destinationFloor = parseInt(req.body.destinationFloor);
-        
-        const direction = (elevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down'); 
-        elevator.status = direction;
-        res.json({status: elevator.status});
+            if (currentDifference < minDifference) {
+                minDifference = currentDifference;
+                selectedElevator = elevator;
+            }
+        }
+
+        if (selectedElevator.currentFloor === req.params.floor) {
+            return res.json({ message: 'Elevator already at that floor' });
+        }
+
+        if (selectedElevator.status === 'idle') {
+            selectedElevator.destinationFloor = req.params.floor;
+        } else {
+            // If the elevator is not idle, store the call in the queue
+            const pendingCall = {
+                floor: req.params.floor,
+                timestamp: Date.now(),
+            };
+            pendingCallsQueue.push(pendingCall);
+            return res.json({ message: 'Elevator assigned. Please wait for the next available idle elevator.' });
+        }
+
+        const direction = (selectedElevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
+        selectedElevator.status = direction;
+
         setTimeout(() => {
-            // res.json(elevator.currentFloor = req.body.destinationFloor);
-        }, 4000);
-    }
-    catch(error) {
+            selectedElevator.currentFloor = req.params.floor;
+            selectedElevator.status = 'idle';
+
+            // Process pending calls when the elevator becomes idle
+            processPendingCalls(selectedElevator);
+
+            res.json({ message: `Elevator arrived at floor ${selectedElevator.currentFloor}` });
+        }, 15000);
+    } catch (error) {
         console.error('Error', error.message);
     }
 }
 
+function processPendingCalls(elevator) {
+    const nextPendingCall = pendingCallsQueue.shift();
 
+    if (nextPendingCall) {
+        elevator.destinationFloor = nextPendingCall.floor;
+        const direction = (elevator.currentFloor < nextPendingCall.floor) ? 'moving_up' : 'moving_down';
+        elevator.status = direction;
 
+        setTimeout(() => {
+            elevator.currentFloor = nextPendingCall.floor;
+            elevator.status = 'idle';
+            console.log(`Elevator ${elevator.id} arrived at floor ${elevator.currentFloor}`);
+
+            // Recursively process more pending calls if any
+            processPendingCalls(elevator);
+        }, 15000);
+    }
+}
 
 app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
 
-async function updateElevatorStatus(elevatorId, status, destinationFloor, req, res) {
+async function updateElevatorStatus(req, res) {
     try{
         const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-        elevator.destinationFloor = parseInt(req.body.destinationFloor);
+        elevator.destinationFloor = req.body.destinationFloor;
+
+        const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
+        elevator.status = direction;
+
         setTimeout(() => {
+            elevator.status = 'idle';
             res.json(elevator.currentFloor = req.body.destinationFloor);
-        }, 4000);
+        }, 6000);
     }
     catch(error) {
         console.error('Error', error.message);
     }
 }
-
-// async function getElevatorStatus(req, res) {
-//     console.log(`Elevator ${id}`);
-//     setTimeout(() => {
-        
-//     }, 4000);
-// }
-
-// function callElevatorToFloor(floor) {
-
-// }
-
-// function updateElevatorStatus(elevatorId, status, destinationFloor) {
-
-// }
-
-// function isElevatorAvailable(elevatorId) {
-
-// }
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
