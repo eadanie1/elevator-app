@@ -71,7 +71,7 @@ async function callElevatorToFloor(req, res) {
         if (selectedElevator.currentFloor === req.params.floor) {
             return res.json({ message: 'Elevator already at that floor' });
         }
-
+        
         if (selectedElevator.status === 'idle') {
             selectedElevator.destinationFloor = req.params.floor;
         } else {
@@ -83,17 +83,17 @@ async function callElevatorToFloor(req, res) {
             pendingCallsQueue.push(pendingCall);
             return res.json({ message: 'Elevator assigned. Please wait for the next available idle elevator.' });
         }
-
+        
         const direction = (selectedElevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
         selectedElevator.status = direction;
-
+        
         setTimeout(() => {
             selectedElevator.currentFloor = req.params.floor;
             selectedElevator.status = 'idle';
-
+            
             // Process pending calls when the elevator becomes idle
             processPendingCalls(selectedElevator);
-
+            
             res.json({ message: `Elevator arrived at floor ${selectedElevator.currentFloor}` });
         }, 15000);
     } catch (error) {
@@ -103,17 +103,17 @@ async function callElevatorToFloor(req, res) {
 
 function processPendingCalls(elevator) {
     const nextPendingCall = pendingCallsQueue.shift();
-
+    
     if (nextPendingCall) {
         elevator.destinationFloor = nextPendingCall.floor;
         const direction = (elevator.currentFloor < nextPendingCall.floor) ? 'moving_up' : 'moving_down';
         elevator.status = direction;
-
+        
         setTimeout(() => {
             elevator.currentFloor = nextPendingCall.floor;
             elevator.status = 'idle';
             console.log(`Elevator ${elevator.id} arrived at floor ${elevator.currentFloor}`);
-
+            
             // Recursively process more pending calls if any
             processPendingCalls(elevator);
         }, 15000);
@@ -125,8 +125,13 @@ app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
 async function updateElevatorStatus(req, res) {
     try{
         const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-        elevator.destinationFloor = req.body.destinationFloor;
 
+        if (elevator.currentFloor === req.body.destinationFloor) {
+            return res.json({ message: 'Elevator already at that floor' });
+        }
+
+        elevator.destinationFloor = req.body.destinationFloor;
+        
         const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
         elevator.status = direction;
 
