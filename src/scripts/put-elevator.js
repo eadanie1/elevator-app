@@ -1,68 +1,38 @@
-import express from 'express';
-import { statusAllElevators, getElevatorStatus, 
-  isElevatorAvailable, getRoutes } from './src/scripts/get-elevator.js';
-import {  } from './src/scripts/put-elevator.js';
-const app = express();
-app.use(express.json());
 
-export const elevators = [
-  {id: 1,
-  currentFloor: 0,
-  status: 'idle',
-  destinationFloor: 0
-  },
-  {id: 2,
-  currentFloor: 0,
-  status: 'idle',
-  destinationFloor: 0
-  },
-  {id: 3,
-  currentFloor: 0,
-  status: 'idle',
-  destinationFloor: 0
-  }
-];
-
-getRoutes.forEach(route => {
-  app.get(route.path, route.handler);
-});
+import { elevators } from "../../app.js";
 
 
+app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
 
+export async function updateElevatorStatus(req, res) {
+  try{
+    const elevator = elevators.find(e => e.id === parseInt(req.params.id));
 
+    if (elevator.currentFloor === req.body.destinationFloor) {
+      return res.json({ message: 'Elevator already at that floor' });
+    }
 
-
-// app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
-
-// async function updateElevatorStatus(req, res) {
-//   try{
-//     const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-
-//     if (elevator.currentFloor === req.body.destinationFloor) {
-//       return res.json({ message: 'Elevator already at that floor' });
-//     }
-
-//     elevator.destinationFloor = req.body.destinationFloor;
+    elevator.destinationFloor = req.body.destinationFloor;
     
-//     const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
-//     elevator.status = direction;
+    const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
+    elevator.status = direction;
 
-//     setTimeout(() => {
-//       elevator.status = 'idle';
-//       res.json(elevator.currentFloor = req.body.destinationFloor);
-//       elevator.destinationFloor = 0;
-//     }, 6000);
-//     }
-//     catch(error) {
-//         console.error('Error', error.message);
-//     }
-// }
+    setTimeout(() => {
+      elevator.status = 'idle';
+      res.json(elevator.currentFloor = req.body.destinationFloor);
+      elevator.destinationFloor = 0;
+    }, 6000);
+    }
+    catch(error) {
+        console.error('Error', error.message);
+    }
+}
 
 // app.put('/api/elevators/call-elevator-to/:floor', callElevatorToFloor);
 
-// const pendingCallsQueue = [];
+// export const pendingCallsQueue = [];
 
-// async function callElevatorToFloor(req, res) {
+// export async function callElevatorToFloor(req, res) {
 //   try {
 //     let minDifference = Math.abs(elevators[0].currentFloor - parseInt(req.params.floor));
 //     let selectedElevator = elevators[0];
@@ -109,7 +79,7 @@ getRoutes.forEach(route => {
 //   }
 // }
 
-// function processPendingCalls(elevator) {
+// export async function processPendingCalls(elevator) {
 //   const nextPendingCall = pendingCallsQueue.shift();
   
 //   if (nextPendingCall) {
@@ -128,9 +98,5 @@ getRoutes.forEach(route => {
 //   }
 // }
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});
 
 export default {  };
