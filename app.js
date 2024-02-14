@@ -1,54 +1,59 @@
-const express = require('express');
+import express from 'express';
+import { statusAllElevators, getRoutes } from './src/scripts/get-elevator.js';
 const app = express();
 app.use(express.json());
 
-const elevators = [
-    {id: 1,
-    currentFloor: 0,
-    status: 'idle',
-    destinationFloor: 0
-    },
-    {id: 2,
-    currentFloor: 0,
-    status: 'idle',
-    destinationFloor: 0
-    },
-    {id: 3,
-    currentFloor: 0,
-    status: 'idle',
-    destinationFloor: 0
-    },
+export const elevators = [
+  {id: 1,
+  currentFloor: 0,
+  status: 'idle',
+  destinationFloor: 0
+  },
+  {id: 2,
+  currentFloor: 0,
+  status: 'idle',
+  destinationFloor: 0
+  },
+  {id: 3,
+  currentFloor: 0,
+  status: 'idle',
+  destinationFloor: 0
+  },
 ];
 
-app.get('/api/elevators', (req, res) => {
-    res.json(elevators);
+getRoutes.forEach(route => {
+  app.get(route.path, route.handler);
 });
 
-app.get('/api/elevators/get-elevator-status', getElevatorStatus);
+// app.get('/api/elevators', (req, res) => {
+//     res.json(elevators);
+// });
 
-async function getElevatorStatus(req, res) {
-    try{
-        const allStatusAndCurrentFloor = elevators.map(elevator => ({
-            currentFloor: elevator.currentFloor,
-            status: elevator.status
-        }));
-        res.json(allStatusAndCurrentFloor);
-    }
-    catch(error) {
-        console.error('Error', error.message);
-    }
-}
+// app.get('/api/elevators/get-elevator-status', getElevatorStatus);
 
-app.get('/api/elevators/availability/:id', isElevatorAvailable);
+// async function getElevatorStatus(req, res) {
+//     try{
+//         const allStatusAndCurrentFloor = elevators.map(elevator => ({
+//             currentFloor: elevator.currentFloor,
+//             status: elevator.status
+//         }));
+//         res.json(allStatusAndCurrentFloor);
+//     }
+//     catch(error) {
+//         console.error('Error', error.message);
+//     }
+// }
 
-async function isElevatorAvailable(req, res) {
-    const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-    if (elevator.status === 'idle') {
-        return res.json({message: `Elevator ${elevator.id} is idle and available for a new call`});
-    } else {
-        return res.json({message: `Elevator ${elevator.id} is busy and unavailable to take a new call`});
-    }
-}
+// app.get('/api/elevators/availability/:id', isElevatorAvailable);
+
+// async function isElevatorAvailable(req, res) {
+//     const elevator = elevators.find(e => e.id === parseInt(req.params.id));
+//     if (elevator.status === 'idle') {
+//         return res.json({message: `Elevator ${elevator.id} is idle and available for a new call`});
+//     } else {
+//         return res.json({message: `Elevator ${elevator.id} is busy and unavailable to take a new call`});
+//     }
+// }
 
 app.put('/api/elevators/call-elevator-to/:floor', callElevatorToFloor);
 
@@ -149,3 +154,5 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
+
+export default {  };
