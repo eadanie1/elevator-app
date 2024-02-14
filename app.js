@@ -7,17 +7,17 @@ const elevators = [
     currentFloor: 0,
     status: 'idle',
     destinationFloor: 0
-},
-{id: 2,
+    },
+    {id: 2,
     currentFloor: 0,
     status: 'idle',
     destinationFloor: 0
-},
-{id: 3,
+    },
+    {id: 3,
     currentFloor: 0,
     status: 'idle',
     destinationFloor: 0
-},
+    },
 ];
 
 app.get('/api/elevators', (req, res) => {
