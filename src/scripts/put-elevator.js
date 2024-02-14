@@ -9,11 +9,14 @@ export async function findIndividualElevator(elevators, req, res) {
   if (!elevator) {
     return res.status(404).json({error: 'No elevator found with that ID'});
   }
-
-  if (elevator.currentFloor === req.body.destinationFloor) {
+  else if (elevator.currentFloor === req.body.destinationFloor) {
     return res.json({ message: 'Elevator already at that floor' });
   }
   return elevator;
+}
+
+export async function sendResponse(locatedElevator, res) {
+  return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
 }
 
 export async function updateElevatorStatus(locatedElevator, req, res) {
@@ -26,8 +29,9 @@ export async function updateElevatorStatus(locatedElevator, req, res) {
     locatedElevator.status = 'idle';
     locatedElevator.currentFloor = req.body.destinationFloor;
     locatedElevator.destinationFloor = 0;
-    return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
+    sendResponse(locatedElevator, res);
   }, 6000);
+  // return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
 }
 
 
