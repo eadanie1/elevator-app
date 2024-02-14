@@ -1,5 +1,5 @@
 import express from 'express';
-import { statusAllElevators, getRoutes } from './src/scripts/get-elevator.js';
+import { statusAllElevators, getRoutes, getElevatorStatus } from './src/scripts/get-elevator.js';
 const app = express();
 app.use(express.json());
 
@@ -18,31 +18,16 @@ export const elevators = [
   currentFloor: 0,
   status: 'idle',
   destinationFloor: 0
-  },
+  }
 ];
 
 getRoutes.forEach(route => {
   app.get(route.path, route.handler);
 });
 
-// app.get('/api/elevators', (req, res) => {
-//     res.json(elevators);
-// });
 
-// app.get('/api/elevators/get-elevator-status', getElevatorStatus);
 
-// async function getElevatorStatus(req, res) {
-//     try{
-//         const allStatusAndCurrentFloor = elevators.map(elevator => ({
-//             currentFloor: elevator.currentFloor,
-//             status: elevator.status
-//         }));
-//         res.json(allStatusAndCurrentFloor);
-//     }
-//     catch(error) {
-//         console.error('Error', error.message);
-//     }
-// }
+
 
 // app.get('/api/elevators/availability/:id', isElevatorAvailable);
 
