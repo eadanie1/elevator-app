@@ -1,7 +1,7 @@
 import express from 'express';
 import { statusAllElevators, getElevatorStatus, 
   isElevatorAvailable, getRoutes } from './src/scripts/get-elevator.js';
-import { findIndividualElevator, updateElevatorStatus, putRoutes } from './src/scripts/put-elevator.js';
+import { updateElevatorStatus, putRoutes } from './src/scripts/put-elevator.js';
 const app = express();
 app.use(express.json());
 
@@ -33,32 +33,6 @@ putRoutes.forEach(route => {
 
 
 
-
-// app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
-
-// async function updateElevatorStatus(req, res) {
-//   try{
-//     const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-
-//     if (elevator.currentFloor === req.body.destinationFloor) {
-//       return res.json({ message: 'Elevator already at that floor' });
-//     }
-
-//     elevator.destinationFloor = req.body.destinationFloor;
-    
-//     const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
-//     elevator.status = direction;
-
-//     setTimeout(() => {
-//       elevator.status = 'idle';
-//       res.json(elevator.currentFloor = req.body.destinationFloor);
-//       elevator.destinationFloor = 0;
-//     }, 6000);
-//     }
-//     catch(error) {
-//         console.error('Error', error.message);
-//     }
-// }
 
 // app.put('/api/elevators/call-elevator-to/:floor', callElevatorToFloor);
 
@@ -135,4 +109,4 @@ app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
 
-export default {  };
+export default { elevators };

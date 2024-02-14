@@ -3,23 +3,17 @@ import { elevators } from "../../app.js";
 
 
 
-export async function findIndividualElevator(elevators, req, res) {
+export async function updateElevatorStatus(elevators, req, res) {
   const elevator = elevators.find(e => e.id === parseInt(req.params.id));
   
   if (!elevator) {
     return res.status(404).json({error: 'No elevator found with that ID'});
   }
-  else if (elevator.currentFloor === req.body.destinationFloor) {
+  
+  if (elevator.currentFloor === req.body.destinationFloor) {
     return res.json({ message: 'Elevator already at that floor' });
   }
-  return elevator;
-}
-
-export async function sendResponse(locatedElevator, res) {
-  return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
-}
-
-export async function updateElevatorStatus(locatedElevator, req, res) {
+  
   locatedElevator.destinationFloor = req.body.destinationFloor;
   
   const direction = (locatedElevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
@@ -29,19 +23,16 @@ export async function updateElevatorStatus(locatedElevator, req, res) {
     locatedElevator.status = 'idle';
     locatedElevator.currentFloor = req.body.destinationFloor;
     locatedElevator.destinationFloor = 0;
-    sendResponse(locatedElevator, res);
-  }, 6000);
-  // return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
+    return res.json({ message: `Elevator no ${locatedElevator.id} has arrived at floor ${locatedElevator.currentFloor}`});
+  }, 3000);
 }
-
 
 export const putRoutes = [
   {
     path: '/api/elevators/set-floor/:id',
     handler: async (req, res) => {
       try{
-        const locatedElevator = await findIndividualElevator(elevators, req, res);
-        await updateElevatorStatus(locatedElevator, req, res);
+        await updateElevatorStatus(elevators, req, res);
       }
       catch(error) {
         console.error('Error', error.message);
@@ -50,41 +41,6 @@ export const putRoutes = [
   }
 ];
 
-// app.put('/api/elevators/set-floor/:id', async (req, res) => {
-//   try{
-//       const locatedElevator = await findIndividualElevator(elevators, req, res);
-//       await updateElevatorStatus(locatedElevator, req, res);
-//     }
-//     catch(error) {
-//         console.error('Error', error.message);
-//       }
-// });
-    
-// app.put('/api/elevators/set-floor/:id', updateElevatorStatus);
-
-// export async function updateElevatorStatus(req, res) {
-//   try{
-//   const elevator = elevators.find(e => e.id === parseInt(req.params.id));
-
-//   if (elevator.currentFloor === req.body.destinationFloor) {
-//     return res.json({ message: 'Elevator already at that floor' });
-//   }
-
-//   elevator.destinationFloor = req.body.destinationFloor;
-
-//   const direction = (elevator.currentFloor < req.body.destinationFloor ? 'moving_up' : 'moving_down'); 
-//   elevator.status = direction;
-
-//   setTimeout(() => {
-//     elevator.status = 'idle';
-//     res.json(elevator.currentFloor = req.body.destinationFloor);
-//     elevator.destinationFloor = 0;
-//     }, 6000);
-//   }
-//   catch(error) {
-//     console.error('Error', error.message);
-//     }
-// }
 
 // app.put('/api/elevators/call-elevator-to/:floor', callElevatorToFloor);
 
@@ -157,4 +113,4 @@ export const putRoutes = [
 // }
 
 
-export default { findIndividualElevator, updateElevatorStatus, putRoutes };
+export default { updateElevatorStatus, putRoutes };
