@@ -1,7 +1,7 @@
 import express from 'express';
 import { statusAllElevators, getElevatorStatus, 
   isElevatorAvailable, getRoutes } from './src/scripts/get-elevator.js';
-import {  } from './src/scripts/put-elevator.js';
+import { putRoutes } from './src/scripts/put-elevator.js';
 const app = express();
 app.use(express.json());
 
@@ -27,7 +27,9 @@ getRoutes.forEach(route => {
   app.get(route.path, route.handler);
 });
 
-
+putRoutes.forEach(route => {
+  app.put(route.path, route.handler);
+});
 
 
 
