@@ -23,7 +23,7 @@ export async function updateElevatorStatus(elevators, req, res) {
     elevator.currentFloor = req.body.destinationFloor;
     elevator.destinationFloor = 0;
     return res.json({ message: `Elevator no ${elevator.id} has arrived at floor ${elevator.currentFloor}`});
-  }, 3000);
+  }, 2000);
 }
 
 
@@ -54,31 +54,12 @@ export async function processPendingCalls(elevator) {
 
 export async function callElevatorToFloor(req, res) {
   
-  const idleElevators = elevators.filter(elevator => elevator.status === 'idle')
+  let idleElevators = elevators.filter(elevator => elevator.status === 'idle')
   
   let minDifference = Math.abs(elevators[0].currentFloor - parseInt(req.params.floor));
   let selectedElevator = elevators[0];
   
-  if (idleElevators.length !== 0) {
-    for (let elevator of elevators) {
-      let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
-      
-      if (currentDifference < minDifference) {
-        minDifference = currentDifference;
-        selectedElevator = elevator;
-      }
-    }
-
-    if (selectedElevator.currentFloor === parseInt(req.params.floor)) {
-      return res.json({ message: 'Elevator already at that floor' });
-    }
-
-    selectedElevator.destinationFloor = parseInt(req.params.floor);
-    
-    const direction = (selectedElevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
-    selectedElevator.status = direction;
-    
-  } else { 
+  if (idleElevators.length === 0) {
     for (let elevator of elevators) {
       let currentDifference = Math.abs(elevator.destinationFloor - parseInt(req.params.floor));
       if (currentDifference < minDifference) {
@@ -103,10 +84,31 @@ export async function callElevatorToFloor(req, res) {
     return res.json({ message: 'Elevator assigned. Please wait for the next available idle elevator.' });
     // }
   }
-  
-  // const direction = (selectedElevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
-  // selectedElevator.status = direction;
-  
+
+  idleElevators.forEach((elevator, index) => {
+      // console.log(idleElevators.length);
+      console.log(idleElevators);
+      let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
+      
+      if (currentDifference < minDifference) {
+        minDifference = currentDifference;
+        selectedElevator = elevator;
+      }  
+      
+      if (selectedElevator.currentFloor === parseInt(req.params.floor)) {
+        return res.json({ message: 'Elevator already at that floor' });
+      }
+      
+      idleElevators[index].destinationFloor = parseInt(req.params.floor);
+      const direction = (idleElevators[index].currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
+      idleElevators[index].status = direction;
+      
+      console.log(index);
+      // if (index !== -1) {
+        idleElevators.splice(index, 1);
+      // }
+  });
+    
   setTimeout(() => {
     selectedElevator.currentFloor = parseInt(req.params.floor);
     selectedElevator.status = 'idle';
@@ -116,33 +118,6 @@ export async function callElevatorToFloor(req, res) {
     
     res.json({ message: `Elevator ${selectedElevator.id} arrived at floor ${selectedElevator.currentFloor}` });
   }, 15000);
-
-  // let minDifference = Math.abs(elevators[0].currentFloor - parseInt(req.params.floor));
-  // let selectedElevator = elevators[0];
-  
-  // for (let elevator of elevators) {
-  //   let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
-    
-  //   if (currentDifference < minDifference) {
-  //     minDifference = currentDifference;
-  //     selectedElevator = elevator;
-  //   }
-  // }
-  
-  // if (selectedElevator.currentFloor === req.params.floor) {
-  //   return res.json({ message: 'Elevator already at that floor' });
-  // }
-  
-  // if (selectedElevator.status === 'idle') {
-  //   selectedElevator.destinationFloor = req.params.floor;
-  // } else {
-  //   const pendingCall = {
-  //     floor: req.params.floor,
-  //     timestamp: Date.now(),
-  //   };
-  //   pendingCallsQueue.push(pendingCall);
-  //   return res.json({ message: 'Elevator assigned. Please wait for the next available idle elevator.' });
-  // }
 }
 
 

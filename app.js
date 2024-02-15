@@ -1,7 +1,7 @@
 import express from 'express';
 import { statusAllElevators, getElevatorStatus, 
   isElevatorAvailable, getRoutes } from './src/scripts/get-elevator.js';
-import { updateElevatorStatus, pendingCallsQueue, processPendingCalls, callElevatorToFloor, putRoutes } from './src/scripts/put-elevator.js';
+import { updateElevatorStatus, pendingCallsQueue, callElevatorToFloor, processPendingCalls, putRoutes } from './src/scripts/put-elevator.js';
 const app = express();
 app.use(express.json());
 
