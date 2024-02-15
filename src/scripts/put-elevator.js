@@ -27,10 +27,6 @@ export async function updateElevatorStatus(elevators, req, res) {
 }
 
 
-
-
-
-
 export const pendingCallsQueue = [];
 
 export async function processPendingCalls(elevator) {
@@ -53,73 +49,47 @@ export async function processPendingCalls(elevator) {
 }
 
 export async function callElevatorToFloor(req, res) {
-  
-  let idleElevators = elevators.filter(elevator => elevator.status === 'idle')
-  
   let minDifference = Math.abs(elevators[0].currentFloor - parseInt(req.params.floor));
   let selectedElevator = elevators[0];
   
-  if (idleElevators.length === 0) {
-    for (let elevator of elevators) {
-      let currentDifference = Math.abs(elevator.destinationFloor - parseInt(req.params.floor));
-      if (currentDifference < minDifference) {
+  for (let elevator of elevators) {
+    let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
+  
+    if (currentDifference < minDifference) {
         minDifference = currentDifference;
         selectedElevator = elevator;
-      }
     }
-    console.log('execution has passed through here 1');
-    
-    if (selectedElevator.destinationFloor === parseInt(req.params.floor)) {
-      return res.json({ message: 'Elevator arriving at that floor shortly' });
-    }
-    console.log('execution has passed through here 2');
-    
-    // selectedElevator.destinationFloor = parseInt(req.params.floor);
-    
+  }
+  
+  if (selectedElevator.currentFloor === parseInt(req.params.floor)) {
+    return res.json({ message: 'Elevator already at that floor' });
+  }
+  
+  if (selectedElevator.status === 'idle') {
+    selectedElevator.destinationFloor = parseInt(req.params.floor);
+  } else {
+    // If the elevator is not idle, store the call in the queue
     const pendingCall = {
       floor: parseInt(req.params.floor),
       timestamp: Date.now(),
     };
     pendingCallsQueue.push(pendingCall);
     return res.json({ message: 'Elevator assigned. Please wait for the next available idle elevator.' });
-    // }
   }
-
-  idleElevators.forEach((elevator, index) => {
-      // console.log(idleElevators.length);
-      console.log(idleElevators);
-      let currentDifference = Math.abs(elevator.currentFloor - parseInt(req.params.floor));
-      
-      if (currentDifference < minDifference) {
-        minDifference = currentDifference;
-        selectedElevator = elevator;
-      }  
-      
-      if (selectedElevator.currentFloor === parseInt(req.params.floor)) {
-        return res.json({ message: 'Elevator already at that floor' });
-      }
-      
-      idleElevators[index].destinationFloor = parseInt(req.params.floor);
-      const direction = (idleElevators[index].currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
-      idleElevators[index].status = direction;
-      
-      console.log(index);
-      // if (index !== -1) {
-        idleElevators.splice(index, 1);
-      // }
-  });
-    
+  
+  const direction = (selectedElevator.currentFloor < parseInt(req.params.floor) ? 'moving_up' : 'moving_down');
+  selectedElevator.status = direction;
+  
   setTimeout(() => {
     selectedElevator.currentFloor = parseInt(req.params.floor);
     selectedElevator.status = 'idle';
-    selectedElevator.destinationFloor = 0;
     
+    // Process pending calls when the elevator becomes idle
     processPendingCalls(selectedElevator);
     
-    res.json({ message: `Elevator ${selectedElevator.id} arrived at floor ${selectedElevator.currentFloor}` });
+    res.json({ message: `Elevator arrived at floor ${selectedElevator.currentFloor}` });
   }, 15000);
 }
-
 
 
 export const putRoutes = [
@@ -137,16 +107,14 @@ export const putRoutes = [
   {
     path: '/api/elevators/call-elevator-to/:floor',
     handler: async (req, res) => {
-      try {
+      try { 
         await callElevatorToFloor(req, res);
-      } 
-      catch (error) {
+      } catch (error) {
         console.error('Error', error.message);
       }
     }    
   }
 ];
-
 
 
 export default { updateElevatorStatus, pendingCallsQueue, processPendingCalls, callElevatorToFloor, putRoutes };
