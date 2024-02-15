@@ -23,11 +23,14 @@ The project is organized into the following directories:
 /elevator-app - this is the main directory for the project, the following files are included in the main folder:
 - .gitignore
 - app.js - the main JavaScript file for the project, which is called in the terminal using nodemon to run the server and execute the HTTP requests (nodemon app.js in terminal)
+- put-elevator.js and get-elevator.js respectively. Imported into app.js for readability and maintainability. 
 - package-lock.json
 - package.json
 - README.md - This README file
 
-/elevator-app/node_modules - contains the downloaded modules/packages for the project to run - however excluded from the respository due to space and not necessary as the package.json file is included.
+./src - contains the source code stored in this repository.
+
+./dist - subfolder for production files. 
 
 ## 5. Technologies Used
 
