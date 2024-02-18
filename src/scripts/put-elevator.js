@@ -2,7 +2,7 @@
 import { elevators } from "../../app.js";
 
 
-export async function updateElevatorStatus(elevators, req, res) {
+export async function updateElevatorStatus(req, res) {
   const elevator = elevators.find(e => e.id === parseInt(req.params.id));
   
   if (!elevator) {
@@ -97,7 +97,7 @@ export const putRoutes = [
     path: '/api/elevators/set-floor/:id',
     handler: async (req, res) => {
       try {
-        await updateElevatorStatus(elevators, req, res);
+        await updateElevatorStatus(req, res);
       }
       catch(error) {
         console.error('Error', error.message);
