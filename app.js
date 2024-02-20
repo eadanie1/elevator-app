@@ -1,10 +1,8 @@
 import express from 'express';
-import { statusAllElevators, getElevatorStatus, 
-  isElevatorAvailable, getRoutes } from './src/scripts/get-elevator.js';
-import { updateElevatorStatus, pendingCallsQueue, callElevatorToFloor, processPendingCalls, putRoutes } from './src/scripts/put-elevator.js';
-import { callsQueue, findClosestElevator, moveElevator , callElevator, postRoutes } from './src/scripts/post-elevator.js';
+import { getRoutes } from './src/scripts/get-elevator.js';
+import { putRoutes } from './src/scripts/put-elevator.js';
+import { callElevatorAPI, callElevatorRouteHandler } from './src/scripts/post-elevator.js';
 const app = express();
-import axios from 'axios';
 app.use(express.json());
 
 export const elevators = [
@@ -33,10 +31,8 @@ putRoutes.forEach(route => {
   app.put(route.path, route.handler);
 });
 
-postRoutes.forEach(route => {
-  app.post(route.path, route.handler);
-});
-
+app.post('/api/elevators/call', callElevatorRouteHandler);
+callElevatorAPI([10, 15, 20, 22, 23, 24]);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
